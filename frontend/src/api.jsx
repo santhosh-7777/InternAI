@@ -1,4 +1,4 @@
-const BASE_URL = 'http://127.0.0.1:8000'
+const BASE_URL = 'https://internai-m7gi.onrender.com'
 
 export async function searchJobs(query, location = 'Bangalore') {
   const res = await fetch(`${BASE_URL}/search`, {
@@ -6,9 +6,11 @@ export async function searchJobs(query, location = 'Bangalore') {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, location })
   })
+
   if (!res.ok) {
     const err = await res.json()
     throw new Error(err.detail || 'Search failed')
   }
+
   return res.json()
 }
