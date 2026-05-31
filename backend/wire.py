@@ -38,7 +38,7 @@ def submit_task(action_id: str, params: dict, credential_id: str = None) -> dict
     return response.json()
 
 
-def poll_result(job_id: str, max_wait: int = 60) -> dict:
+def poll_result(job_id: str, max_wait: int = 300) -> dict:
     url = f"{BASE_URL}/holocron/jobs/{job_id}"
     waited = 0
 
@@ -46,6 +46,7 @@ def poll_result(job_id: str, max_wait: int = 60) -> dict:
         res = requests.get(url, headers=HEADERS, timeout=15)
         res.raise_for_status()
         data = res.json()
+        print(f"[Wire Status] {job_id}: {data.get('status')}")
 
         if data.get("status") == "completed":
             return data.get("data", {})
