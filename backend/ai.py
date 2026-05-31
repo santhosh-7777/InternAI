@@ -1,13 +1,12 @@
 import os
 import json
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 from models import AIInsight
 
 load_dotenv()
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-2.0-flash")
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 def analyze_jobs(jobs: list, salary: dict, query: str) -> AIInsight:
@@ -16,9 +15,8 @@ def analyze_jobs(jobs: list, salary: dict, query: str) -> AIInsight:
     Returns an AIInsight object.
     """
 
-    # Build a compact job summary to send (avoid token overload)
     job_summaries = []
-    for job in jobs[:20]:  # limit to 20 jobs for prompt size
+    for job in jobs[:20]:
         job_summaries.append({
             "title": job.get("title"),
             "company": job.get("company"),
@@ -62,10 +60,12 @@ Rules:
 """
 
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
+        )
         raw = response.text.strip()
 
-        # Clean up if Gemini adds backticks anyway
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
@@ -83,7 +83,6 @@ Rules:
 
     except Exception as e:
         print(f"[Gemini Error] {e}")
-        # Return safe fallback so frontend doesn't crash
         return AIInsight(
             summary=f"Found {len(jobs)} {query} opportunities across multiple platforms.",
             top_skills=["Python", "Git", "Communication", "Problem Solving", "APIs"],
